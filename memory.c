@@ -1,16 +1,39 @@
 #include "memory.h"
 #include "kernel.h"
+#include "buddy_system.h"
+
+struct buddy_system physical_memory_allocator;
+
+void memory_allocator_init() {
+    uint32_t aligned_start = align_up((uint32_t) MEM_START, MIN_BLOCK_SIZE << MAX_ORDER);
+    printf("start = %u\n", aligned_start);
+    size_t aligned_size = MEM_SIZE - (aligned_start - (uint32_t) MEM_START);
+    printf("size = %u\n", aligned_size);
+    buddy_init(&physical_memory_allocator, (void *)aligned_start, aligned_size);
+}
 
 paddr_t alloc_pages(uint32_t n) {
-    static paddr_t next_paddr = (paddr_t) __free_ram;
-    paddr_t paddr = next_paddr;
-    next_paddr += n * PAGE_SIZE;
-    if (next_paddr > (paddr_t) __free_ram_end) {
-        PANIC("out of memory");
+    uint32_t cnt = n;
+    uint8_t order = 0;
+    while (cnt > 1) {
+        order += 1;
+        cnt >>= 1;
     }
     
-    memset((void*) paddr, 0, n * PAGE_SIZE);
-    return paddr;
+    return buddy_alloc(&physical_memory_allocator, n * MIN_BLOCK_SIZE);
+    // static paddr_t next_paddr = (paddr_t) __free_ram;
+    // paddr_t paddr = next_paddr;
+    // next_paddr += n * PAGE_SIZE;
+    // if (next_paddr > (paddr_t) __free_ram_end) {
+    //     PANIC("out of memory");
+    // }
+    
+    // memset((void*) paddr, 0, n * PAGE_SIZE);
+    // return paddr;
+}
+
+void free_pages(void *pages) {
+    buddy_free(&physical_memory_allocator, pages);
 }
 
 void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags) {

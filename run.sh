@@ -14,7 +14,7 @@ $OBJCOPY -Ibinary -Oelf32-littleriscv shell.bin shell.bin.o
 
 # Build the kernel.
 $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map -o kernel.elf \
-    kernel.c common.c memory.c virtio_blk.c process.c shell.bin.o
+    kernel.c common.c memory.c virtio_blk.c process.c buddy_system.c shell.bin.o
 
 (cd disk && tar cf ../disk.tar --format=ustar *.txt)
 

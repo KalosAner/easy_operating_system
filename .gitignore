@@ -6,3 +6,4 @@
 *.log
 *.pcap
 .DS_Store
+tmp/

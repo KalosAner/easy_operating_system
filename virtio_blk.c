@@ -31,6 +31,7 @@ void virtio_reg_fetch_and_or32(unsigned offset, uint32_t value) {
 }
 
 bool virtq_is_busy(struct virtio_virtq *vq) {
+    // printf("test6\n");
     return vq->last_used_index != *vq->used_index;
 }
 
@@ -77,6 +78,7 @@ void virtio_blk_init(void) {
 }
 
 void read_write_disk(void *buf, unsigned sector, int is_write) {
+    printf("test5 %d %d\n", blk_capacity, SECTOR_SIZE);
     if (sector >= blk_capacity / SECTOR_SIZE) {
         printf("virtio: tried to read/write sector=%d, but capacity is %d\n",
               sector, blk_capacity / SECTOR_SIZE);
@@ -105,8 +107,7 @@ void read_write_disk(void *buf, unsigned sector, int is_write) {
     vq->descs[2].flags = VIRTQ_DESC_F_WRITE;
 
     virtq_kick(vq, 0);
-    while (virtq_is_busy(vq))
-        ;
+    while (virtq_is_busy(vq));
 
     if (blk_req->status != 0) {
         printf("virtio: warn: failed to read/write sector=%d status=%d\n",
@@ -171,10 +172,12 @@ void fs_flush(void) {
 }
 
 void fs_init(void) {
+    printf("test4 %d %d\n", sizeof(disk), SECTOR_SIZE);
     for (unsigned sector = 0; sector < sizeof(disk) / SECTOR_SIZE; sector++)
         read_write_disk(&disk[sector * SECTOR_SIZE], sector, false);
 
     unsigned off = 0;
+    printf("test3 %d\n", FILES_MAX);
     for (int i = 0; i < FILES_MAX; i++) {
         struct tar_header *header = (struct tar_header *) &disk[off];
         if (header->name[0] == '\0')

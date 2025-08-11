@@ -77,6 +77,19 @@ void printf(const char *fmt, ...) {
 
                     break;
                 }
+                case 'u': {
+                    unsigned value = va_arg(vargs, unsigned);
+                    unsigned magnitude = value;
+                    unsigned divisor = 1;
+                    while (magnitude / divisor > 9)
+                        divisor *= 10;
+                    while (divisor > 0) {
+                        putchar('0' + magnitude / divisor);
+                        magnitude %= divisor;
+                        divisor /= 10;
+                    }
+                    break;
+                }
                 case 'x': {
                     unsigned value = va_arg(vargs, unsigned);
                     for (int i = 7; i >= 0; i--) {
