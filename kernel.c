@@ -203,11 +203,9 @@ void kernel_main(void) {
     memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);
     printf("\n\n");
     WRITE_CSR(stvec, (uint32_t) kernel_entry);
-    printf("test1\n");
     memory_allocator_init();
     virtio_blk_init();
     fs_init();
-    printf("test2\n");
 
     idle_proc = create_process(NULL, 0);
     idle_proc->pid = 0; // idle

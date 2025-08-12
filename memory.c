@@ -2,25 +2,21 @@
 #include "kernel.h"
 #include "buddy_system.h"
 
-struct buddy_system physical_memory_allocator;
+struct buddy_system phys_alloc;
 
 void memory_allocator_init() {
-    uint32_t aligned_start = align_up((uint32_t) MEM_START, MIN_BLOCK_SIZE << MAX_ORDER);
-    printf("start = %u\n", aligned_start);
-    size_t aligned_size = MEM_SIZE - (aligned_start - (uint32_t) MEM_START);
-    printf("size = %u\n", aligned_size);
-    buddy_init(&physical_memory_allocator, (void *)aligned_start, aligned_size);
+    size_t total_pages = (MEM_SIZE - 0x10000) / PAGE_SIZE;
+    size_t meta_size = total_pages * sizeof(struct page_meta);
+    
+    void *meta_base = (void *)((paddr_t) __free_ram + 0x100000);
+    void *data_base = (void *)((paddr_t) __free_ram + 0x200000);
+    
+    static struct buddy_system phys_alloc;
+    buddy_init(&phys_alloc, meta_base, data_base, total_pages);
 }
 
 paddr_t alloc_pages(uint32_t n) {
-    uint32_t cnt = n;
-    uint8_t order = 0;
-    while (cnt > 1) {
-        order += 1;
-        cnt >>= 1;
-    }
-    
-    return buddy_alloc(&physical_memory_allocator, n * MIN_BLOCK_SIZE);
+    return buddy_alloc(&phys_alloc, n * PAGE_SIZE);
     // static paddr_t next_paddr = (paddr_t) __free_ram;
     // paddr_t paddr = next_paddr;
     // next_paddr += n * PAGE_SIZE;
@@ -32,9 +28,10 @@ paddr_t alloc_pages(uint32_t n) {
     // return paddr;
 }
 
-void free_pages(void *pages) {
-    buddy_free(&physical_memory_allocator, pages);
+void free_physical_page(void *page) {
+    buddy_free(&phys_alloc, page);
 }
+
 
 void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags) {
     if (!is_aligned(vaddr, PAGE_SIZE)) {

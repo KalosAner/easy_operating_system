@@ -78,7 +78,6 @@ void virtio_blk_init(void) {
 }
 
 void read_write_disk(void *buf, unsigned sector, int is_write) {
-    printf("test5 %d %d\n", blk_capacity, SECTOR_SIZE);
     if (sector >= blk_capacity / SECTOR_SIZE) {
         printf("virtio: tried to read/write sector=%d, but capacity is %d\n",
               sector, blk_capacity / SECTOR_SIZE);
@@ -172,12 +171,10 @@ void fs_flush(void) {
 }
 
 void fs_init(void) {
-    printf("test4 %d %d\n", sizeof(disk), SECTOR_SIZE);
     for (unsigned sector = 0; sector < sizeof(disk) / SECTOR_SIZE; sector++)
         read_write_disk(&disk[sector * SECTOR_SIZE], sector, false);
 
     unsigned off = 0;
-    printf("test3 %d\n", FILES_MAX);
     for (int i = 0; i < FILES_MAX; i++) {
         struct tar_header *header = (struct tar_header *) &disk[off];
         if (header->name[0] == '\0')
