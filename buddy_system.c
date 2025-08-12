@@ -47,25 +47,22 @@ void buddy_init(struct buddy_system *buddy, void *meta_base, void *data_base, si
         INIT_LIST_HEAD(&buddy->free_lists[i]);
     }
     
-    for (size_t i = 0; i < total_pages; i++) {
-        buddy->meta_array[i].order = 0;
-        buddy->meta_array[i].flags = 0;
-    }
-    
     size_t block_order = buddy->max_order;
     size_t block_pages = 1UL << block_order;
     
-    buddy->meta_array[0].order = block_order;
-    buddy->meta_array[0].flags = META_IS_FIRST_PAGE;
-    
-    for (size_t i = 1; i < block_pages; i++) {
+    for (size_t i = 0; i < total_pages; i++) {
         buddy->meta_array[i].order = block_order;
         buddy->meta_array[i].flags = 0;
     }
-    
-    struct list_head *node = (struct list_head *)buddy->memory_base;
-    INIT_LIST_HEAD(node);
-    list_add(node, &buddy->free_lists[block_order]);
+
+    size_t current_page = 0;
+    while (current_page + block_pages < total_pages) {
+        buddy->meta_array[current_page].flags = META_IS_FIRST_PAGE;
+        struct list_head *node = (struct list_head *) ((paddr_t) buddy->memory_base + current_page * PAGE_SIZE);
+        INIT_LIST_HEAD(node);
+        list_add(node, &buddy->free_lists[block_order]);
+        current_page += block_pages;
+    }
 }
 
 paddr_t buddy_alloc(struct buddy_system *buddy, size_t size) {

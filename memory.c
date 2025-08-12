@@ -2,16 +2,15 @@
 #include "kernel.h"
 #include "buddy_system.h"
 
-struct buddy_system phys_alloc;
+static struct buddy_system phys_alloc;
 
 void memory_allocator_init() {
-    size_t total_pages = (MEM_SIZE - 0x10000) / PAGE_SIZE;
+    size_t total_pages = (MEM_SIZE - 0x600000) / PAGE_SIZE;
     size_t meta_size = total_pages * sizeof(struct page_meta);
     
     void *meta_base = (void *)((paddr_t) __free_ram + 0x100000);
     void *data_base = (void *)((paddr_t) __free_ram + 0x200000);
     
-    static struct buddy_system phys_alloc;
     buddy_init(&phys_alloc, meta_base, data_base, total_pages);
 }
 
